@@ -3,6 +3,9 @@
 ### Add your own stuff here ###
 
 slurm-logs/
+data/
+scratch.txt
+test*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
