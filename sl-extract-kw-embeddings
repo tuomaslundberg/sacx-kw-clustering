@@ -44,6 +44,10 @@ module purge > /dev/null 2>&1 # Get rid of boilerplate stderr
 module use /appl/local/csc/modulefiles > /dev/null 2>&1
 module load pytorch > /dev/null 2>&1
 
+#export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
+
+#rocm-smi
+
 # Run the script for each fold
 #for i in $(seq 1 10); do
 for i in $(seq 1); do
