@@ -2,13 +2,9 @@ import sys
 import os
 import torch
 import datasets
-from datasets import Features, Sequence, Value
 import re
 import gc
-import json
 from string import punctuation
-from collections import defaultdict
-from copy import deepcopy
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 SPECIAL_TOKENS = {"<s>", "</s>", "<pad>", "<unk>"}
@@ -29,7 +25,6 @@ def tokenize_fn(ex):
 	return tokenizer(ex['text'], return_tensors='pt', truncation=True, padding=True)
 
 def enrich_dataset_fn(ex):
-	ex = deepcopy(ex) # Avoid modifying the original example
 	doc_tokens = tokenizer.convert_ids_to_tokens(ex['input_ids'])
 	doc_words = []
 	word_indices = []
@@ -49,31 +44,10 @@ def enrich_dataset_fn(ex):
 	for i, word in enumerate(doc_words):
 		for j, kw in enumerate(keywords):
 			if word == kw:
-				#if 'indices_start' not in ex['keywords'][j]:
-				#	ex['keywords'][j]['indices_start'] = []
-				#if 'indices_end' not in ex['keywords'][j]:
-				#	ex['keywords'][j]['indices_end'] = []
 				start, end = word_indices[i]
 				ex["keywords"][j]["indices_start"].append(start)
 				ex["keywords"][j]["indices_end"].append(end)
-	# Add the tokenized text, words and word indices to the example
-	# Doubt these are needed, but keeping for now
-	#print(ex['keywords'])
-	#return None
-	#return {"keywords": ex['keywords']}
-	#print(json.dumps(ex['keywords'], indent=2))
-	#for kw in ex['keywords']:
-	#	print(kw)
-	#	for i in kw['indices_start']:
-	#		assert isinstance(i, int)
-	#	for i in kw['indices_end']:
-	#		assert isinstance(i, int)
 	return ex
-	#return {
-	#	"tokenized_text": doc_tokens,
-	#	"words": doc_words,
-	#	"word_indices": word_indices
-	#}
 
 def flatten_by_tokens(state):
 	"""Flatten a model layer output wrt. tokens. Tokens are in dimension -2."""
@@ -94,7 +68,7 @@ def extract(ex, layer=-1):
 			attention_mask=attention_mask,
 			output_hidden_states=True
 		)
-	embeddings = output['hidden_states'][layer][0]#.cpu().tolist()
+	embeddings = output['hidden_states'][layer][0]
 	del output
 	torch.cuda.empty_cache()
 
@@ -116,13 +90,8 @@ def extract(ex, layer=-1):
 
 	del embeddings
 	gc.collect()
-	#print(ex['keywords'])
 
 	return {"keywords": ex['keywords']}
-
-	#print(embeddings)
-	#sys.exit()
-	#return {"embeddings": embeddings}
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -137,56 +106,18 @@ model = AutoModelForSequenceClassification.from_pretrained(
 )
 model.to(device)
 
-#print(dataset['train'][0]['keywords'])
-
 dataset = dataset.map(tokenize_fn, batched=True)
 
-print(dataset['train'][0]['keywords'])
-
-# Add the new 'indices' field (a sequence of tuple-like lists)
-new_features = dataset['train'].features.copy()
-new_features["keywords"] = Sequence({
-    "token": Value("string"),
-    "preds": Sequence(Value("string")),
-    "indices_start": Sequence(Value("int32")),
-    "indices_end": Sequence(Value("int32"))
-})
-
-#print(dataset['train'].features)
-#dataset['train'] = dataset['train'].cast(new_features)
-#print(dataset['train'].features)
-
 # Now run the map with the updated features
-dataset = dataset.map(enrich_dataset_fn, batched=False, remove_columns=[], load_from_cache_file=False)#, features=new_features)
+dataset = dataset.map(enrich_dataset_fn, batched=False, remove_columns=[], load_from_cache_file=False)
 
-#dataset.set_format("python")
-#dataset['train'] = dataset['train'].cast(new_features)
-
-#for i in range(len(dataset['train'])):
-#    try:
-#        _ = new_features.encode_example(dataset['train'][i])
-#    except Exception as e:
-#        print(f"Row {i} failed:", e)
-
-#print("###################################################################### KEYWORDS FIELD ######################################################################")
-print(dataset['train'][0]['keywords'])
-
-#print(torch.cuda.memory_summary())
-
-#print("\n\n############################ BEFORE EXTRACTION ############################\n\n")
-#print(dataset['train'][0])
 dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
 
 dataset = dataset.map(extract, batched=False)
 
 dataset.set_format("python")
 
-print(dataset['train'][0]['keywords'])
-
-print("\n\n############################ AFTER EXTRACTION ############################\n\n")
 print(dataset['train'][0])
 
 dataset.save_to_disk(checkpoint_path)
-
-
 
