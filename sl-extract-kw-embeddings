@@ -2,15 +2,15 @@
 
 #SBATCH --job-name=extract_kw_embeddings
 #SBATCH --account=project_462000353
-#SBATCH --partition=dev-g
+#SBATCH --partition=small-g
 #SBATCH --mem=192G
-#SBATCH --time=00:10:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-node=1
 #SBATCH --output=slurm-logs/array_%A_%a.out
 #SBATCH --error=slurm-logs/array_%A_%a.err
-#SBATCH --array=3
+#SBATCH --array=0-3
 
 # If run without sbatch, invoke here
 if [ -z "$SLURM_JOB_ID" ]; then
@@ -45,8 +45,7 @@ module use /appl/local/csc/modulefiles > /dev/null 2>&1
 module load pytorch > /dev/null 2>&1
 
 # Run the script for each fold
-#for i in $(seq 1 10); do
-for i in $(seq 1); do
+for i in $(seq 1 10); do
 	# Run the Python script with the parameters
 	srun --ntasks=1 python -u extract_embeddings.py \
 		"$DATASET" \
