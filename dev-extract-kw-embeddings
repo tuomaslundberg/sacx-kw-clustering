@@ -2,15 +2,15 @@
 
 #SBATCH --job-name=extract_kw_embeddings
 #SBATCH --account=project_462000353
-#SBATCH --partition=small-g
+#SBATCH --partition=dev-g
 #SBATCH --mem=192G
-#SBATCH --time=00:30:00
+#SBATCH --time=00:10:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-node=1
 #SBATCH --output=slurm-logs/array_%A_%a.out
 #SBATCH --error=slurm-logs/array_%A_%a.err
-#SBATCH --array=0-39
+#SBATCH --array=20
 
 # If run without sbatch, invoke here
 if [ -z "$SLURM_JOB_ID" ]; then
@@ -37,7 +37,7 @@ read -r DATASET MODELS EMBEDDINGS < paths-extract-embs.txt
 
 # You can feed different hyperparameter combinations to the script using this
 # Currently, only language is supported
-read -r LANG FOLD < <(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" param-grid-emb-extraction.txt)
+read -r LANG FOLD < <(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" param-grid-emb-extraction.txt) # TODO: perhaps expand param grid, extract from different file
 
 # Load the Python environment
 module purge > /dev/null 2>&1 # Get rid of boilerplate stderr

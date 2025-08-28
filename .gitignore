@@ -4,8 +4,10 @@
 
 slurm-logs/
 data/
+output/
 scratch.txt
 test*
+archive*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
