@@ -2,15 +2,15 @@
 
 #SBATCH --job-name=average_embeddings
 #SBATCH --account=project_462000353
-#SBATCH --partition=dev-g
-#SBATCH --mem=192G
-#SBATCH --time=00:10:00
+#SBATCH --partition=small-g
+#SBATCH --mem=32G
+#SBATCH --time=00:05:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-node=1
 #SBATCH --output=slurm-logs/array_%A_%a.out
 #SBATCH --error=slurm-logs/array_%A_%a.err
-#SBATCH --array=0
+#SBATCH --array=0-3
 
 # If run without sbatch, invoke here
 if [ -z "$SLURM_JOB_ID" ]; then

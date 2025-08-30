@@ -15,7 +15,7 @@ os.makedirs(args['output_dir'], exist_ok=True)
 
 # --- Load all folds ---
 num_folds = 10
-fold_files = [os.path.join(input_dir, f"embeddings_fold_{i}.tsv") for i in range(num_folds)]
+fold_files = [os.path.join(input_dir, f"embeddings-fold_{i + 1}.tsv") for i in range(num_folds)]
 
 agg = defaultdict(list)            # (token, pred) -> list of embeddings
 seen_in_folds = defaultdict(set)   # (token, pred) -> set of fold indices
