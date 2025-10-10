@@ -1,1 +1,1 @@
-data/filtered-datasets/	input/register-classifiers/	data/embeddings/
+kw-filtered-datasets/	FacebookAI/xlm-roberta-large	kw-embeddings/xlm-r/

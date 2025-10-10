@@ -32,15 +32,13 @@ _AR_UR_MAP = str.maketrans({
 })
 
 # To make accessing path arguments easier
-arg_keys = ['data_dir', 'model_dir', 'result_dir', 'lang', 'fold']
+arg_keys = ['data_dir', 'model_dir', 'result_dir', 'lang']
 args = dict(zip(arg_keys, sys.argv[1:]))
 
 hf_path = os.path.join(args['data_dir'], f"data-with-keywords-{args['lang']}")
-model_path = os.path.join(args['model_dir'], f"{args['fold']}")
-checkpoint_path = os.path.join(args['result_dir'], f"data-with-embs-{args['lang']}")
-emb_path = os.path.join(args['result_dir'], args['lang'], f"embeddings-{args['fold']}.tsv")
+model_path = args['model_dir']
+emb_path = os.path.join(args['result_dir'], f"embeddings-{args['lang']}.tsv")
 os.makedirs(args['result_dir'], exist_ok=True)
-os.makedirs(os.path.join(args['result_dir'], args['lang']), exist_ok=True)
 
 def tokenize_fn(ex):
 	text = "" if ex is None else ex['text']
@@ -361,9 +359,9 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 dataset = datasets.load_from_disk(hf_path)
 
 # Uncomment for testing
-#dataset['train'] = dataset['train'].select(range(min(10, len(dataset['train']))))
+# dataset['train'] = dataset['train'].select(range(min(10, len(dataset['train']))))
 
-tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base", use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
 
 SPECIAL_IDS = set(tokenizer.all_special_ids)
 

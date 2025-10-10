@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=extract_kw_embeddings
-#SBATCH --account=project_462000353
+#SBATCH --account=project_462000999
 #SBATCH --partition=small-g
 #SBATCH --mem=192G
 #SBATCH --time=00:30:00
@@ -10,7 +10,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --output=slurm-logs/array_%A_%a.out
 #SBATCH --error=slurm-logs/array_%A_%a.err
-#SBATCH --array=0-39
+#SBATCH --array=0-3
 
 # If run without sbatch, invoke here
 if [ -z "$SLURM_JOB_ID" ]; then
@@ -31,13 +31,22 @@ ln -s "array_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.out" "slurm-logs/curre
 # Load the path parameters from the files
 # The first line of paths.txt should contain, in order:
 # 1. The filtered dataset containing the keywords related to documents
-# 2. The model directory
+# 2. The model directory or Hugging Face repo name
 # 3. Output data folder (does not need to exist)
-read -r DATASET MODELS EMBEDDINGS < paths-extract-embs.txt
+read -r DATASET MODEL EMBEDDINGS < paths-extract-embs.txt
+
+DATASET="$DATA/$DATASET"
+EMBEDDINGS="$DATA/$EMBEDDINGS"
 
 # You can feed different hyperparameter combinations to the script using this
 # Currently, only language is supported
-read -r LANG FOLD < <(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" param-grid-emb-extraction.txt)
+read -r LANG < <(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" param-grid-emb-extraction.txt)
+
+echo "Running with parameters:"
+echo "DATASET: $DATASET"
+echo "MODEL: $MODEL"
+echo "EMBEDDINGS: $EMBEDDINGS"
+echo "LANG: $LANG"
 
 # Load the Python environment
 module purge > /dev/null 2>&1 # Get rid of boilerplate stderr
@@ -47,12 +56,9 @@ module load pytorch > /dev/null 2>&1
 # Run the Python script with the parameters
 python -u extract_embeddings.py \
 	"$DATASET" \
-	"$MODELS" \
+	"$MODEL" \
 	"$EMBEDDINGS" \
-	"$LANG" \
-	"fold_${FOLD}" &
-
-wait
+	"$LANG"
 
 # Walltime statistics
 sacct -o jobid,elapsed -j "${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
