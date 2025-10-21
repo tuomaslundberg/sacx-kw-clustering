@@ -32,17 +32,18 @@ for file in os.listdir(keywords_path):
 		filepath = os.path.join(keywords_path, file)
 		df_list.append(pd.read_csv(filepath))
 
-keywords = pd.unique(pd.concat(df_list, ignore_index=True)['token']).tolist()
-embeddings = {kw: model.get_word_vector(kw).tolist() for kw in keywords}
+# Combine dataframes and collect unique (token, pred) pairs
+df = pd.concat(df_list, ignore_index=True)[['token', 'pred']]
 
-def save_embeddings(lang, embeddings, output_path):
+def save_embeddings(lang, df, model, output_path):
 	rows = []
-	for keyword, embed in embeddings.items():
+	for _, row in df.iterrows():
+		token = str(row['token'])
 		rows.append({
 			"lang": lang,
-			"text": keyword,
-			"embed_last": embed,
-			"preds": "",
+			"text": token,
+			"embed_last": model.get_word_vector(token).tolist(),
+			"preds": eval(row['pred'])[0],
 		})
 
 	# Write TSV
@@ -57,5 +58,5 @@ def save_embeddings(lang, embeddings, output_path):
 				r["preds"],
 			])
 
-save_embeddings(lang, embeddings, output_path)
+save_embeddings(lang, df, model, output_path)
 print(f"Embeddings saved to {output_path}")
