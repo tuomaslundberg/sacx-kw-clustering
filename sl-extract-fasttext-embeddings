@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #SBATCH --job-name=extract_fasttext_embeddings
-#SBATCH --account=project_462000999
 #SBATCH --partition=small-g
 #SBATCH --mem=96G
 #SBATCH --time=00:10:00
@@ -11,6 +10,7 @@
 #SBATCH --output=slurm-logs/array_%A_%a.out
 #SBATCH --error=slurm-logs/array_%A_%a.err
 #SBATCH --array=0-3
+source ~/lumi-env.sh
 
 # If run without sbatch, invoke here
 if [ -z "$SLURM_JOB_ID" ]; then

@@ -1,0 +1,1 @@
+keywords/without-id/hplt-bge/style-exact/threshold-04	sentence-transformers/LaBSE	kw-embeddings/labse-cosine

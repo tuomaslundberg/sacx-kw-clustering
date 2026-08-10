@@ -1,10 +1,8 @@
+from sentence_transformers import SentenceTransformer
 import sys
 import os
 import csv
-import json
 import pandas as pd
-import fasttext
-import fasttext.util
 from sklearn.preprocessing import normalize
 import numpy as np
 import ast
@@ -14,19 +12,19 @@ arg_keys = ['keywords_path', 'model_path', 'output_dir', 'lang']
 args = dict(zip(arg_keys, sys.argv[1:]))
 
 lang = args['lang']
-model_file = f"cc.{lang}.300.bin"
+#model_file = f"cc.{lang}.300.bin"
 
 keywords_path = os.path.join(args['keywords_path'])
-model_path = os.path.join(args['model_path'], model_file)
+model_path = args['model_path']
 output_path = os.path.join(args['output_dir'], f"embeddings-{lang}.tsv")
 os.makedirs(args['output_dir'], exist_ok=True)
 
-if not os.path.exists(model_path):
-	print(f"Model for language {lang} not found, downloading to script folder")
-	fasttext.util.download_model(lang, if_exists='ignore')
-	model_path = model_file
+#if not os.path.exists(model_path):
+#	print(f"Model for language {lang} not found, downloading to script folder")
+#	fasttext.util.download_model(lang, if_exists='ignore')
+#	model_path = model_file
 
-model = fasttext.load_model(model_path)
+model = SentenceTransformer(model_path)
 
 df_list = []
 
@@ -66,12 +64,12 @@ def save_embeddings(lang, df, model, output_path):
 			writer.writerow(["lang", "text", "embed_last", "preds"])
 		return
 
-	emb_list = [model.get_word_vector(t) for t in rows_df['token']]
+	emb_list = [model.encode(t) for t in rows_df['token']]
 	emb_arr = np.vstack(emb_list)  # shape (n, dim)
 
 	# subtract mean embedding
-	mean_vec = emb_arr.mean(axis=0)
-	emb_arr = emb_arr - mean_vec
+	#mean_vec = emb_arr.mean(axis=0)
+	#emb_arr = emb_arr - mean_vec
 
 	emb_arr = normalize(emb_arr)
 
